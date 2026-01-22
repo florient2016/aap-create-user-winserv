@@ -1,0 +1,53 @@
+---
+- name: Ansible Playbook to create user group on windows server with control
+  hosts: "dept_finance:&env_dev:&windows"
+  gather_facts: no
+  vars:
+    win_group_name:
+      - name: "aap_group_administrators"
+        win_group_description: "Group for Ansible Automation Platform users"
+
+    win_user_name: 
+      - name: "aap_administrator"
+        win_user_fullname: "Ansible Automation Platform Administrator user"
+        win_user_description: "User for Ansible Automation Platform with administrative privileges"
+        win_user_password: "P@ssw0rd123!"  # Ensure this meets Windows password complexity requirements
+        win_user_never_expires: true
+  tasks:
+    - name: list all available users
+      ansible.windows.win_user_info:
+      register: user_info
+
+    - name: list existing user 
+      ansible.builtin.debug:
+        msg: "{{ user_info.users }}"
+
+    - name: check if user exists
+      ansible.builtin.set_fact:
+        user_exists: "{{ win_user_name in user_info.users | map(attribute='name') | list }}"
+
+    - name: Create group
+      ansible.windows.win_group:
+        name: "{{ item.name }}"
+        description: "{{ item.win_group_description }}"
+        state: present
+      loop: "{{ win_group_name }}"
+
+    - name: Create user with administrative privileges
+      ansible.windows.win_user:
+        name: "{{ item.name }}"
+        full_name: "{{ item.win_user_fullname }}"
+        description: "{{ item.win_user_description }}"
+        password: "{{ item.win_user_password }}"
+        password_never_expires: "{{ item.win_user_never_expires }}"
+        state: present
+      loop: "{{ win_user_name }}"
+      when: not user_exists
+
+    - name: Add user to administrator group 
+      ansible.windows.win_group_membership:
+        name: "{{ item.name }}"
+        members:
+          - "{{ win_user_name[0].name }}"
+        state: present
+      loop: "{{ win_group_name }}"
