@@ -29,7 +29,7 @@
     - name: check if user exists
       ansible.builtin.set_fact:
         user_exists: "{{ win_user_name[0].name in user_info.output }}"
-        
+
     - name: Create group
       ansible.windows.win_group:
         name: "{{ item.name }}"
@@ -40,7 +40,7 @@
     - name: Create user with administrative privileges
       ansible.windows.win_user:
         name: "{{ item.name }}"
-        full_name: "{{ item.win_user_fullname }}"
+        fullname: "{{ item.win_user_fullname }}"
         description: "{{ item.win_user_description }}"
         password: "{{ item.win_user_password }}"
         password_never_expires: "{{ item.win_user_never_expires }}"
@@ -55,3 +55,19 @@
           - "{{ win_user_name[0].name }}"
         state: present
       loop: "{{ win_group_name }}"
+      register: add_user_to_group
+
+    - name: list all members of the group
+      ansible.windows.win_powershell:
+        script: |
+          Get-LocalGroupMember -Group "{{ win_group_name[0].name }}" | Select-Object -ExpandProperty Name
+      register: group_members_info  
+    
+    - name: Display group members
+      ansible.builtin.debug:
+        msg: "Members of group {{ win_group_name[0].name }}: {{ group_members_info.output }}"
+    
+    - name: Display result of adding user to group
+      ansible.builtin.debug:
+        msg: "User {{ win_user_name[0].name }} added to group {{ item.name }}: {{ add_user_to_group.results[loop.index0].changed }}"
+      loop: "{{ win_group_name }}" 
