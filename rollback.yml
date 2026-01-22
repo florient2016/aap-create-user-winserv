@@ -1,0 +1,31 @@
+---
+- name: Ansible Playbook to remove user and group on Windows Server
+  hosts: "dept_finance:&env_dev:&windows"
+  gather_facts: no
+  vars:
+    win_group_name:
+      - name: "aap_group_administrators"
+
+    win_user_name:
+      - name: "aap_administrator"
+
+  tasks:
+    - name: Remove user from group
+      ansible.windows.win_group_membership:
+        name: "{{ item.name }}"
+        members:
+          - "{{ win_user_name[0].name }}"
+        state: absent
+      loop: "{{ win_group_name }}"
+
+    - name: Remove user
+      ansible.windows.win_user:
+        name: "{{ item.name }}"
+        state: absent
+      loop: "{{ win_user_name }}"
+
+    - name: Remove group
+      ansible.windows.win_group:
+        name: "{{ item.name }}"
+        state: absent
+      loop: "{{ win_group_name }}"
