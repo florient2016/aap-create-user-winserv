@@ -24,12 +24,12 @@
 
     - name: list existing user 
       ansible.builtin.debug:
-        msg: "{{ user_info.users }}"
+        msg: "{{ user_info.output }}"
 
     - name: check if user exists
       ansible.builtin.set_fact:
-        user_exists: "{{ win_user_name in user_info.users | map(attribute='name') | list }}"
-
+        user_exists: "{{ win_user_name[0].name in user_info.output }}"
+        
     - name: Create group
       ansible.windows.win_group:
         name: "{{ item.name }}"
