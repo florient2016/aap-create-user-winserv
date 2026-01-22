@@ -17,7 +17,9 @@
         win_user_never_expires: true
   tasks:
     - name: list all available users
-      ansible.windows.win_user_info:
+      ansible.windows.win_powershell:
+        script: |
+          Get-LocalUser | Select-Object -ExpandProperty Name
       register: user_info
 
     - name: list existing user 
