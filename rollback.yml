@@ -29,3 +29,17 @@
         name: "{{ item.name }}"
         state: absent
       loop: "{{ win_group_name }}"
+
+    - name: Confirm user removal
+      ansible.windows.win_powershell:
+        script: |
+          if (Get-LocalUser -Name "{{ win_user_name[0].name }}" -ErrorAction SilentlyContinue) {
+              Write-Output "User exists"
+          } else {
+              Write-Output "User does not exist"
+          }
+      register: user_removal_check
+
+    - name: Display user removal status
+      ansible.builtin.debug:
+        msg: "{{ user_removal_check.output }}"
