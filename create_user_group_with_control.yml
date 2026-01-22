@@ -2,6 +2,8 @@
 - name: Ansible Playbook to create user group on windows server with control
   hosts: "dept_finance:&env_dev:&windows"
   gather_facts: no
+  collections:
+    - ansible.windows
   vars:
     win_group_name:
       - name: "aap_group_administrators"
